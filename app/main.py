@@ -1,9 +1,9 @@
-import os
 from fastapi import FastAPI
-from app.schemas import MonthlyReportRequest, MonthlyReportResponse
-from app.report.service import generate_monthly_report
+from app.core.gemini_client import gemini_key_present
+from app.agents.a6_reports.router import router as a6_router
+from app.agents.a7_receipts.router import router as a7_router
 
-app = FastAPI(title="KidzGo AI Service - Monthly Report")
+app = FastAPI(title="KidzGo AI Service")
 
 @app.get("/health")
 def health():
@@ -11,9 +11,8 @@ def health():
 
 @app.get("/debug/ai")
 def debug_ai():
-    # KHÔNG in key ra, chỉ báo có/không
-    return {"gemini_key_present": bool(os.getenv("GEMINI_API_KEY"))}
+    return {"gemini_key_present": gemini_key_present()}
 
-@app.post("/generate-monthly-report", response_model=MonthlyReportResponse)
-def generate_report(req: MonthlyReportRequest):
-    return generate_monthly_report(req)
+# Routes
+app.include_router(a6_router, prefix="/a6", tags=["A6 Reports"])
+app.include_router(a7_router, prefix="/a7", tags=["A7 Receipts"])
