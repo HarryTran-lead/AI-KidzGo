@@ -15,10 +15,21 @@ class ReportRange(BaseModel):
     from_date: str  # YYYY-MM-DD
     to_date: str    # YYYY-MM-DD
 
+class RecentMonthlyReport(BaseModel):
+    month: str  # YYYY-MM
+    overview: Optional[str] = None
+    strengths: List[str] = Field(default_factory=list)
+    improvements: List[str] = Field(default_factory=list)
+    highlights: List[str] = Field(default_factory=list)
+    goals_next_month: List[str] = Field(default_factory=list)
+    
 class MonthlyReportRequest(BaseModel):
     student: StudentInfo
     range: ReportRange
     session_feedbacks: List[SessionFeedback] = Field(default_factory=list)
+    recent_reports: List[RecentMonthlyReport] = Field(default_factory=list)
+    recent_reports: List[RecentMonthlyReport] = Field(default_factory=list)
+    teacher_notes: Optional[str] = None
     language: str = "vi"
 
 class ReportSections(BaseModel):

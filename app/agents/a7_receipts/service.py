@@ -3,6 +3,27 @@ from typing import Any, Dict, Optional
 from app.core.gemini_client import get_gemini_client
 from app.core.utils import safe_json_loads, normalize_amount_to_number, normalize_account
 
+def _infer_transaction_type(content: Optional[str], raw_text: Optional[str]) -> str:
+    haystack = " ".join([content or "", raw_text or ""]).lower()
+    if not haystack.strip():
+        return "Khác"
+
+    rules = {
+        "Trả lương": ["lương", "salary", "payroll"],
+        "Thanh toán cơ sở vật chất": ["cơ sở vật chất", "csvc", "equipment", "vật tư", "mua sắm"],
+        "Thu học phí": ["học phí", "tuition", "course fee", "fee"],
+        "Thuê mặt bằng": ["thuê", "mặt bằng", "rent"],
+        "Hoàn tiền": ["hoàn", "refund", "reimburse"],
+        "Thưởng": ["thưởng", "bonus"],
+        "Phụ cấp": ["phụ cấp", "allowance"],
+        "Đặt cọc": ["đặt cọc", "deposit"],
+    }
+
+    for label, keywords in rules.items():
+        if any(k in haystack for k in keywords):
+            return label
+    return "Khác"
+
 def extract_payment_proof(
     image_bytes: bytes,
     mime_type: str,
@@ -54,6 +75,8 @@ Trả về DUY NHẤT 1 JSON object (không markdown, không giải thích) theo
 Quy tắc:
 - amount phải chuẩn hóa về số (VND), bỏ dấu phẩy/chấm phân tách nghìn.
 - Ưu tiên lấy: Số tiền, Ngày giờ, Mã GD/Trace/Ref, Nội dung.
+- Phân loại transaction_type dựa trên nội dung, ví dụ: "Trả lương", "Thu học phí",
+  "Thanh toán cơ sở vật chất", "Thuê mặt bằng", "Hoàn tiền", "Thưởng", "Phụ cấp", "Đặt cọc", "Khác".
 """
 
     try:
@@ -77,6 +100,10 @@ Quy tắc:
         fields["amount"] = normalize_amount_to_number(fields.get("amount"))
         fields["sender_account"] = normalize_account(fields.get("sender_account"))
         fields["receiver_account"] = normalize_account(fields.get("receiver_account"))
+        fields["transaction_type"] = fields.get("transaction_type") or _infer_transaction_type(
+            fields.get("content"),
+            raw_text,
+        )
 
         return {
             "ai_used": True,

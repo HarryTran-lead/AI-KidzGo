@@ -33,13 +33,34 @@ def _rule_based_sections(texts: List[str]) -> Dict[str, Any]:
         ]
     }
 
+def _format_recent_reports(recent_reports: List[Any]) -> str:
+    if not recent_reports:
+        return "Không có dữ liệu báo cáo 3 tháng gần nhất."
+
+    lines = []
+    for report in recent_reports[-3:]:
+        lines.append(f"- Tháng: {report.month}")
+        if report.overview:
+            lines.append(f"  Tổng quan: {report.overview}")
+        if report.strengths:
+            lines.append("  Điểm mạnh: " + "; ".join(report.strengths))
+        if report.improvements:
+            lines.append("  Cần cải thiện: " + "; ".join(report.improvements))
+        if report.highlights:
+            lines.append("  Nhận xét tiêu biểu: " + "; ".join(report.highlights))
+        if report.goals_next_month:
+            lines.append("  Mục tiêu tháng tới: " + "; ".join(report.goals_next_month))
+    return "\n".join(lines)
+
 def generate_monthly_report(req) -> Dict[str, Any]:
     name = req.student.name
     program = req.student.program or ""
     from_d, to_d = req.range.from_date, req.range.to_date
     texts = [x.text.strip() for x in req.session_feedbacks if x.text and x.text.strip()]
     total = len(texts)
-
+    recent_reports_summary = _format_recent_reports(req.recent_reports)
+    teacher_notes = (req.teacher_notes or "").strip() or "Không có ghi chú bổ sung."
+    recent_reports_summary = _format_recent_reports(req.recent_reports)
     overview_fallback = (
         f"Trong giai đoạn {from_d} đến {to_d}, hiện chưa có đủ nhận xét sau buổi học để tổng hợp báo cáo."
         if total == 0 else
@@ -89,6 +110,7 @@ def generate_monthly_report(req) -> Dict[str, Any]:
     prompt = f"""
 Bạn là giáo viên trung tâm tiếng Anh KidzGo.
 Hãy tổng hợp báo cáo tháng dựa CHỈ trên feedback sau buổi học (không bịa).
+Để so sánh tiến bộ, tham chiếu thêm dữ liệu báo cáo 3 tháng gần nhất (nếu có).
 Nếu thiếu dữ liệu phần nào, ghi rõ "Chưa đủ dữ liệu để kết luận".
 
 Trả về DUY NHẤT 1 JSON object (không markdown, không giải thích):
@@ -106,6 +128,8 @@ Thời gian: {from_d} đến {to_d}
 
 Feedback:
 {chr(10).join([f"- {t}" for t in texts])}
+Báo cáo 3 tháng gần nhất:
+{recent_reports_summary}
 """
 
     try:
