@@ -20,3 +20,8 @@ app.include_router(a6_router, prefix="/a6", tags=["A6 Reports"])
 app.include_router(a7_router, prefix="/a7", tags=["A7 Receipts"])
 app.include_router(a3_router, prefix="/a3", tags=["A3 Homework"])
 app.include_router(a8_router, prefix="/a8", tags=["A8 Speaking/Phonics"])
+
+if __name__ == "__main__":
+    import uvicorn
+    # Use import string to enable reload feature
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
