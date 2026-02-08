@@ -1,5 +1,9 @@
 from fastapi import FastAPI
+from dotenv import load_dotenv
 from app.core.gemini_client import gemini_key_present
+
+# Load environment variables from .env file
+load_dotenv()
 
 from app.agents.a6_reports.router import router as a6_router
 from app.agents.a7_receipts.router import router as a7_router

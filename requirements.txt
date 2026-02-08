@@ -3,5 +3,4 @@ uvicorn
 pydantic
 python-multipart
 google-genai
-google-genai
-python-multipart
+python-dotenv
