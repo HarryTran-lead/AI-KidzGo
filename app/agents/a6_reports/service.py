@@ -53,11 +53,15 @@ def _format_recent_reports(recent_reports: List[Any]) -> str:
     return "\n".join(lines)
 
 def generate_monthly_report(req) -> Dict[str, Any]:
+    
+    
     name = req.student.name
     program = req.student.program or ""
     from_d, to_d = req.range.from_date, req.range.to_date
     texts = [x.text.strip() for x in req.session_feedbacks if x.text and x.text.strip()]
     total = len(texts)
+    
+    
     recent_reports_summary = _format_recent_reports(req.recent_reports)
     teacher_notes = (req.teacher_notes or "").strip() or "Không có ghi chú bổ sung."
     recent_reports_summary = _format_recent_reports(req.recent_reports)
